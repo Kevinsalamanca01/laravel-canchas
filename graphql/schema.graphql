@@ -1,0 +1,101 @@
+# Tipos escalares personalizados
+scalar Date
+scalar Time
+
+# Tipo Usuario
+type Usuario {
+  id_usuario: ID!
+  nombre: String
+  correo: String
+  telefono: String
+  reservas: [Reserva] @hasMany
+}
+
+# Tipo Cancha
+type Cancha {
+  id_cancha: ID!
+  nombre: String
+  ubicacion: String
+  tipo: String
+  reservas: [Reserva] @hasMany
+  disponibilidad: [Disponibilidad] @hasMany
+}
+
+
+input CanchaFilter {
+  nombre: String
+  ubicacion: String
+  tipo: String
+}
+
+# Tipo Reserva
+type Reserva {
+  id_reserva: ID!
+  id_usuario: Int
+  id_cancha: Int
+  fecha_reserva: Date
+  hora_reserva: Time
+  usuario: Usuario @belongsTo
+  cancha: Cancha @belongsTo
+  pago: Pago @hasOne
+}
+
+# Tipo Pago
+type Pago {
+  id_pago: ID!
+  id_reserva: Int
+  monto: Float
+  metodo_pago: String
+  fecha_pago: Date
+  reserva: Reserva @belongsTo
+}
+
+# Tipo Disponibilidad
+type Disponibilidad {
+  id_disponibilidad: ID!
+  id_cancha: Int
+  fecha: Date
+  hora: Time
+  estado: String
+  cancha: Cancha @belongsTo
+}
+
+# Mutaciones para crear, actualizar y eliminar reservas
+type Mutation {
+  createReserva(
+    id_cancha: ID!
+    id_usuario: ID!
+    fecha_reserva: Date!
+    hora_reserva: Time!
+  ): Reserva @field(resolver: "App\\GraphQL\\Mutations\\CreateReserva")
+
+createCanchaConReservas(
+    input: CanchaConReservasInput!
+  ): Cancha @field(resolver: "App\\GraphQL\\Mutations\\CreateCanchaConReservas")
+}
+
+# Consultas disponibles para el cliente GraphQL
+type Query {
+  usuarios: [Usuario!]! @all
+ canchas(filter: CanchaFilter): [Cancha!]! @field(resolver: "App\\GraphQL\\Resolvers\\CanchaResolver@resolve")
+  reservas: [Reserva!]! @all
+  pagos: [Pago!]! @all
+  disponibilidades: [Disponibilidad!]! @all
+
+  disponibilidadDisponible: [Disponibilidad] 
+    @field(resolver: "App\\GraphQL\\Resolvers\\DisponibilidadResolver@resolve")
+}
+
+
+input ReservaInput {
+  id_usuario: ID!
+  fecha_reserva: Date!
+  hora_reserva: Time!
+}
+
+input CanchaConReservasInput {
+  nombre: String!
+  ubicacion: String
+  tipo: String
+  reservas: [ReservaInput!] 
+}
